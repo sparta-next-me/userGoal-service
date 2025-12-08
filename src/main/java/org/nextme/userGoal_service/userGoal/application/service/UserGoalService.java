@@ -41,4 +41,24 @@ public class UserGoalService {
         userGoalRepository.save(userGoal);
     }
 
+    // 사용자 목표 수정
+    public void update(UserGoalRequest userGoalRequest) {
+
+        // 사용자가 작성한 목표가 있는지 확인
+        UserGoal goal_user = userGoalRepository.findByUserId(userGoalRequest.userId());
+
+        // 사용자가 작성한 목표가 없다면
+        if(goal_user == null){
+            throw new GoalException(GoalErrorCode.GOAL_NOT_FOUND);
+        }
+
+        // 수정할 정보가 있는지 획인 후 있다면 상태 업데이트
+        boolean updatedGoal = goal_user.updateGoal(userGoalRequest);
+
+        // 수정할 정보가 없다면
+        if(!updatedGoal){
+            throw new GoalException(GoalErrorCode.GOAL_NOTING_CHANGE);
+        }
+
+    }
 }
