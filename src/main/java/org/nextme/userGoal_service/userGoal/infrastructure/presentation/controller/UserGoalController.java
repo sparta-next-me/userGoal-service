@@ -22,4 +22,11 @@ public class UserGoalController {
         return ResponseEntity.ok(CustomResponse.onSuccess("목표가 생성되었습니다."));
 
     }
+
+    @PatchMapping
+    // 사용자 목표 정보 수정
+    public ResponseEntity<CustomResponse> update(@RequestBody UserGoalRequest request) {
+        userGoalService.update(request);
+        return ResponseEntity.ok(CustomResponse.onSuccess("목표가 수정되었습니다."));
+    }
 }
