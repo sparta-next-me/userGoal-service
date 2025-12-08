@@ -8,6 +8,7 @@ import org.nextme.userGoal_service.userGoal.domain.entity.UserGoal;
 import org.nextme.userGoal_service.userGoal.domain.entity.UserGoalId;
 import org.nextme.userGoal_service.userGoal.domain.repository.UserGoalRepository;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.UserGoalRequest;
+import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.response.UserGoalResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -60,5 +61,20 @@ public class UserGoalService {
             throw new GoalException(GoalErrorCode.GOAL_NOTING_CHANGE);
         }
 
+    }
+
+    // 사용자 목표 조회
+    public UserGoalResponse getGoal(UUID userGoalId) {
+
+        // 조회할 사용자가 있는지
+        UserGoal userGoal = userGoalRepository.findByUserId(userGoalId);
+
+
+        // 사용자 목표가 없다면
+        if (userGoal == null) {
+            throw new GoalException(GoalErrorCode.GOAL_NOT_FOUND);
+        }
+
+        return UserGoalResponse.of(userGoal);
     }
 }
