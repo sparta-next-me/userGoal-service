@@ -2,7 +2,9 @@ package org.nextme.userGoal_service.userGoal.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.nextme.common.jpa.BaseEntity;
+import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.UserGoalRequest;
 
 import java.util.UUID;
 
@@ -28,14 +30,27 @@ public class UserGoal extends BaseEntity {
     private String job;
 
     @Column(name = "capital")
+    @ColumnDefault("0")
+    // 자본금
     private int capital;
 
     @Column(name = "monthly_income")
+    @ColumnDefault("0")
+    //월수입
     private int monthlyIncome;
 
     @Column(name = "goal_detail")
+    // 목표상세
     private String goalDetail;
 
+    @Column(name = "fixed_expenses")
+    @ColumnDefault("0")
+    //월고정지출
+    private int fixedExpenses;
+
     @Column(name = "user_id", nullable = false)
+    // 사용자 ID
     private UUID userId;
+
+
 }
