@@ -77,4 +77,17 @@ public class UserGoalService {
 
         return UserGoalResponse.of(userGoal);
     }
+
+    // 사용자 목표 삭제
+    public void deleteGoal(UUID userGoalId) {
+        // 삭제할 사용자가 있는지
+        UserGoal userGoal = userGoalRepository.findByUserId(userGoalId);
+
+        if (userGoal == null) {
+            throw new GoalException(GoalErrorCode.GOAL_NOT_FOUND);
+        }
+
+        userGoalRepository.delete(userGoal);
+
+    }
 }

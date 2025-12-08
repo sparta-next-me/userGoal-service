@@ -39,4 +39,10 @@ public class UserGoalController {
         return ResponseEntity.ok(CustomResponse.onSuccess("목표가 조회되었습니다.",response));
 
     }
+
+    @DeleteMapping
+    public ResponseEntity<CustomResponse> delete(@RequestParam UUID userGoalId) {
+        userGoalService.deleteGoal(userGoalId);
+        return ResponseEntity.ok(CustomResponse.onSuccess("목표가 삭제되었습니다."));
+    }
 }
