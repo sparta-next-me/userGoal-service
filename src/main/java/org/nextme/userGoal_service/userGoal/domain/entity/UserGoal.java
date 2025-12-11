@@ -89,5 +89,8 @@ public class UserGoal extends BaseEntity {
     }
 
 
-
+    // 사용자 목표 추가
+    public void updateUserGoal(String goalDetail) {
+        this.goalDetail = goalDetail;
+    }
 }

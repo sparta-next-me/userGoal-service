@@ -28,7 +28,7 @@ public class Report extends BaseEntity {
     // 사용모델
     private String modelName;
 
-    @Column(name ="result_report", nullable = false)
+    @Column(name ="result_report", nullable = false,columnDefinition = "TEXT")
     // 분석 결과
     private String resultReport;
 }

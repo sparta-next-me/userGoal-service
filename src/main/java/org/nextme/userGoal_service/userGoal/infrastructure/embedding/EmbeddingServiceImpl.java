@@ -2,7 +2,9 @@ package org.nextme.userGoal_service.userGoal.infrastructure.embedding;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.nextme.userGoal_service.userGoal.application.exception.GoalErrorCode;
 import org.nextme.userGoal_service.userGoal.application.exception.GoalException;
 import org.nextme.userGoal_service.userGoal.domain.entity.UserGoal;
@@ -11,9 +13,10 @@ import org.nextme.userGoal_service.userGoal.infrastructure.client.BankItemClient
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.EmbeddingGoalRequest;
 import org.nextme.userGoal_service.userGoal.infrastructure.rebbitmq.UpdateUserGoalEvent;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
-import org.springframework.ai.vectorstore.SearchRequest;
+
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.document.Document;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,11 +25,13 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
+@Transactional
 public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
     private final UserGoalRepository userGoalRepository;
     private final VectorStore vectorStore;
     private final BankItemClient bankItemClient;
-
+    private final JdbcClient jdbcClient;
 
 
     /**
@@ -36,6 +41,17 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
 
     @Override
     public void embeddingGoal(EmbeddingGoalRequest request) {
+
+        // 사용자 목표 임베딩 + 저장
+        userGoalEmbed(request);
+
+        // 금융상품 임베딩 + 저장
+        bankItemEmbed();
+
+    }
+
+    // 사용자 목표 임베딩 + 저장
+    public void userGoalEmbed(EmbeddingGoalRequest request) {
 
         // 1. DB에서 사용자 목표 조회
         UserGoal goals = userGoalRepository.findByUserId(request.userid());
@@ -53,40 +69,44 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
 
         TokenTextSplitter splitter = new TokenTextSplitter(1000, 400, 10, 5000, true);
 
+        // 사용자의 아이디가 있는지 조회
+        int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '사용자목표' AND metadata->> 'userId' = :userId")
+                .param("userId",request.userid().toString())
+                .query(int.class)
+                .single();
 
-        // 백터디비에 사용자의 목표 있는지 조회
-        // similaritySearch : 유사한 벡터를 검색하는 메서드
-        List<Document> existingUser = vectorStore.similaritySearch(
-                //SearchRequest : similaritySearch를 호출할 때 전달하는 검색 조건 객체
-                SearchRequest.builder()
-                        //query → 벡터 유사도 계산용 (임베딩 필요),
-                        // query 용도: 1. 백터 존재 여부 확인용 / 2. 질문에 대한 값을 넣음 (예시 : "서울 아파트 투자 전략 알려줘")
-                        .query(userText)
-                        // filterExpression → metadata 기준 필터링
-                        .filterExpression("userId == '" + goals.getUserId().toString() + "'")
-                        .topK(1)
-                        .build()
-        );
 
-        // 이미 데이터가 있다면 임베딩 하지 않고 검색하여 ai로 보냄
-        if (existingUser.isEmpty()) {
-            List<Document> userDocs = List.of(new Document(userText,
-                    Map.of("source", "사용자목표", "userId", goals.getUserId())));
-            List<Document> splitUserDocs = splitter.apply(userDocs);
-            vectorStore.accept(splitUserDocs);
-        } else {
-            System.out.println("사용자 목표 이미 존재: " + goals.getUserId());
+        if (count > 0) {
+            System.out.println("이미 있음");
+            return;
         }
 
+        List<Document> userDocs = List.of(new Document(userText,
+                Map.of("source", "사용자목표", "userId", goals.getUserId())));
+        List<Document> splitUserDocs = splitter.apply(userDocs);
+        vectorStore.accept(splitUserDocs);
+    }
 
-
-        List<Document> userGoal =List.of(new Document(userText.toString(), Map.of("source","사용자목표","userId",goals.getUserId())));
-
+    // 금융상품 임베딩+저장
+    public void bankItemEmbed() {
 
         // 4. 금융상품 Embedding
         List<Map<String, Object>> bankItems = bankItemClient.getFinancialProducts();
 
+        TokenTextSplitter splitter = new TokenTextSplitter(1000, 400, 10, 5000, true);
+
         for(Map<String, Object> item : bankItems) {
+
+            int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '금융상품' AND metadata->> 'bankItemId' = :bankItemId")
+                    .param("bankItemId",item.get("bankItemId"))
+                    .query(int.class)
+                    .single();
+
+            if(count > 0) {
+
+                continue;
+            }
+
             String bankItem ="";
             bankItem += " 금융상품 상품명 : " + item.get("fin_prdt_nm");
             bankItem += " 가입제한 : " + item.get("join_deny");
@@ -101,29 +121,15 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
             bankItem += " 기타유의사항 : " + item.get("etc_note");
 
 
-            // 백터디비에 금융상품 있는지 조회
-            // similaritySearch : 유사한 벡터를 검색하는 메서드
-            List<Document> existingGoal = vectorStore.similaritySearch(
-                    //SearchRequest : similaritySearch를 호출할 때 전달하는 검색 조건 객체
-                    SearchRequest.builder()
-                            //query → 벡터 유사도 계산용 (임베딩 필요),
-                            // query 용도: 1. 백터 존재 여부 확인용 / 2. 질문에 대한 값을 넣음 (예시 : "서울 아파트 투자 전략 알려줘")
-                            .query(bankItem)
-                            // filterExpression → metadata 기준 필터링
-                            .filterExpression("bankId == " + item.get("bankItemId") + "'")
-                            .topK(1)
-                            .build()
-            );
-            if (existingGoal.isEmpty()) {
-                Document doc = new Document(bankItem,
-                        Map.of("source", "금융상품", "bankItemId", item.get("bankItemId")));
-                List<Document> splitBankDocs = splitter.apply(List.of(doc));
-                vectorStore.accept(splitBankDocs);
-            } else {
-                System.out.println("금융상품 이미 존재: " + item.get("bankItemId"));
-            }
-        }
 
+            Document doc = new Document(bankItem,
+                    Map.of("source", "금융상품", "bankItemId", item.get("bankItemId")));
+            List<Document> splitBankDocs = splitter.apply(List.of(doc));
+
+            // 임베딩한 값 저장
+            vectorStore.accept(splitBankDocs);
+
+        }
     }
 
     @Override

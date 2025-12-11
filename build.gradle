@@ -72,6 +72,10 @@ dependencies {
     // Ollama 모델 연동 (임베딩 및 추론 엔진)
     implementation 'org.springframework.ai:spring-ai-starter-model-ollama'
 
+    // kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
+
 
 }
 

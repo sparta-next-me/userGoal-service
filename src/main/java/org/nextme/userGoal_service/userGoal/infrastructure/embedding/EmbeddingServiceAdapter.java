@@ -6,5 +6,5 @@ import org.nextme.userGoal_service.userGoal.infrastructure.rebbitmq.UpdateUserGo
 
 public interface EmbeddingServiceAdapter {
     void embeddingGoal(EmbeddingGoalRequest request); // 생성용
-    void updateEmbeddingGoal(UpdateUserGoalEvent updateUserGoalEvent); // 수정용
+    void updateEmbeddingGoal(UpdateUserGoalEvent updateUserGoalEvent); // 사용자 목표 수정용
 }
