@@ -9,6 +9,8 @@ import org.nextme.userGoal_service.userGoal.domain.entity.UserGoalId;
 import org.nextme.userGoal_service.userGoal.domain.repository.UserGoalRepository;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.UserGoalRequest;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.response.UserGoalResponse;
+import org.nextme.userGoal_service.userGoal.infrastructure.rebbitmq.UpdatePublisher;
+import org.nextme.userGoal_service.userGoal.infrastructure.rebbitmq.UpdateUserGoalEvent;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -19,6 +21,8 @@ import java.util.UUID;
 public class UserGoalService {
 
     private final UserGoalRepository userGoalRepository;
+    private final UpdatePublisher updatePublisher;
+
 
     // 사용자 목표 생성
     public void create(UserGoalRequest userGoalRequest) {
@@ -56,10 +60,28 @@ public class UserGoalService {
         // 수정할 정보가 있는지 획인 후 있다면 상태 업데이트
         boolean updatedGoal = goal_user.updateGoal(userGoalRequest);
 
-        // 수정할 정보가 없다면
+        // 수정할 정보 없이 수정 요청을 했다면
         if(!updatedGoal){
             throw new GoalException(GoalErrorCode.GOAL_NOTING_CHANGE);
         }
+
+        // 수정된 정보만 이벤트로 넘기기
+        String updateData = "";
+
+        updateData += "나이 : " + userGoalRequest.age();
+        updateData +=" 직업 : " + userGoalRequest.job();
+        updateData +=  " 자본금: " + userGoalRequest.capital();
+        updateData += " 월수입 : " +  userGoalRequest.monthlyIncome();
+        updateData += " 월 고정지출 : " +userGoalRequest.fixedExpenses();
+
+        // 수정 완료 후 이벤트 발행
+        UpdateUserGoalEvent event = new UpdateUserGoalEvent(
+                userGoalRequest.userId(),
+                updateData // 수정된 목표 상세만 보내기
+        );
+
+        // 이벤트 보내기
+        updatePublisher.sendUpdateEvent(event);
 
     }
 

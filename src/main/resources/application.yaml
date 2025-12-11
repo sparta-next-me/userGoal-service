@@ -17,3 +17,63 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  # Google Vertex AI 및 벡터 스토어 설정
+#  ai:
+#    vertex:
+#      ai:
+#        gemini:
+#          project-id: ${GEMINI_PROJECT_ID}
+#          location: us-west1
+#        vectorstore:
+#          pgvector:
+#            index-type: HNSW
+#            distance-type: COSINE_DISTANCE
+#            dimensions: 3072
+#
+## 별도 gemini 관련 일반 설정
+#gemini:
+#  project-id: ${GEMINI_PROJECT_ID}
+#  embedding-model: gemini-embedding-001
+
+## 1. Ollama 설정 (EXAONE-Deep 7.8B)
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+  # Chat (AI 분석) 모델
+      chat:
+        options:
+          # Chat 추론 모델 설정
+          model: exaone-deep:7.8b
+          temperature: 0.7
+  # Embedding (벡터 생성) 모델
+      embedding:
+        options:
+#          임베딩 모델 설정 (VectorStore에서 사용)
+          model: exaone-deep:7.8b
+
+
+  rabbitmq:
+    host: localhost #RabbitMQ host ip
+    port: 5672 #RabbitMQ port
+    username: guest #RabbitMQ 웹 관리 콘솔 아이디
+    password: guest #RabbitMQ 웹 관리 콘솔 비밀번호
+
+rabbitmq:
+  queue:
+    name: nextme-queue #사용할 queue 이름
+  exchange:
+    name: nextme-exchange #사용할 exchange 이름
+  routing:
+    key: key
+
+
+
+
+  #Temperature 값	답변의 특성	적합한 사용처
+  # 0.0 (최소)	    결정론적이고 일관적입니다. 모델이 항상 가장 확률이 높은 단어만 선택하여, 같은 질문에 같은 답변을 반복합니다.	사실 기반 질문, 요약, 번역, 코드 생성 등 일관성이 중요한 작업.
+
+
+  #0.7 (중간)	균형 잡힌 답변을 제공합니다. 약간의 창의성을 허용하지만, 질문의 맥락에서 크게 벗어나지 않습니다.	일반적인 대화, 금융 상품 분석, RAG 기반 답변 등 실용적인 작업.
+  #1.0 (최대)	창의적이고 무작위적입니다. 확률이 낮은 단어 선택을 자주 허용하여, 같은 질문에도 매번 매우 다른 답변을 생성합니다.	이야기 창작, 브레인스토밍, 시나리오 개발 등 높은 창의성이 요구되는 작업.
+
