@@ -110,7 +110,7 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
                             // query 용도: 1. 백터 존재 여부 확인용 / 2. 질문에 대한 값을 넣음 (예시 : "서울 아파트 투자 전략 알려줘")
                             .query(bankItem)
                             // filterExpression → metadata 기준 필터링
-                            .filterExpression("bankId == '" + item.get("bankItemId") + "'")
+                            .filterExpression("bankId == " + item.get("bankItemId") + "'")
                             .topK(1)
                             .build()
             );
