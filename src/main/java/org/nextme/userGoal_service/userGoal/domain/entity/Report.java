@@ -24,6 +24,11 @@ public class Report extends BaseEntity {
     // 목표 ID
     private UserGoal userGoal;
 
+    @Column(name = "question")
+    // 질문
+    private String question;
+
+
     @Column(name = "model_name", nullable = false)
     // 사용모델
     private String modelName;
@@ -31,4 +36,8 @@ public class Report extends BaseEntity {
     @Column(name ="result_report", nullable = false,columnDefinition = "TEXT")
     // 분석 결과
     private String resultReport;
+
+    public void updateQuestion(String question) {
+        this.question = question;
+    }
 }

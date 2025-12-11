@@ -39,10 +39,6 @@ public class UserGoal extends BaseEntity {
     //월수입
     private int monthlyIncome;
 
-    @Column(name = "goal_detail")
-    // 목표상세
-    private String goalDetail;
-
     @Column(name = "fixed_expenses")
     @ColumnDefault("0")
     //월고정지출
@@ -88,9 +84,9 @@ public class UserGoal extends BaseEntity {
 
     }
 
-
-    // 사용자 목표 추가
-    public void updateUserGoal(String goalDetail) {
-        this.goalDetail = goalDetail;
-    }
+//
+//    // 사용자 목표 추가
+//    public void updateUserGoal(String goalDetail) {
+//        this.goalDetail = goalDetail;
+//    }
 }

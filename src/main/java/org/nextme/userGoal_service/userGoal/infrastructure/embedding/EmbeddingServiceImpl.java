@@ -16,6 +16,7 @@ import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.document.Document;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 
@@ -65,7 +66,8 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
                         " 직업: " + goals.getJob() +
                         " 자본금 : " + goals.getCapital() +
                         " 월수입 : " + goals.getMonthlyIncome() +
-                        " 월고정지출 : " + goals.getFixedExpenses();
+                        " 월고정지출 : " + goals.getFixedExpenses()+
+                "질문 : " + request.question();
 
         TokenTextSplitter splitter = new TokenTextSplitter(1000, 400, 10, 5000, true);
 
@@ -133,8 +135,24 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
     }
 
     @Override
+    @RabbitListener(queues = "nextme-queue")
     // 사용자가 목표 수정했을 시 백터 테이블 수정
     public void updateEmbeddingGoal(UpdateUserGoalEvent updateUserGoalEvent) {
+        // 사용자의 아이디가 있는지 조회
+        int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '사용자목표' AND metadata->> 'userId' = :userId")
+                .param("userId",updateUserGoalEvent.getUserId().toString())
+                .query(int.class)
+                .single();
+
+        // 유저가 있다면
+        if (count > 0) {
+            jdbcClient.sql(
+                            "UPDATE vector_store SET content = :content " +
+                                    "WHERE metadata->>'source' = '사용자목표' AND metadata->>'userId' = :userId")
+                    .param("content", updateUserGoalEvent.getUpdateGoal())
+                    .param("userId", updateUserGoalEvent.getUserId().toString())
+                    .update();
+        }
 
     }
 

@@ -4,6 +4,6 @@ import java.util.UUID;
 
 public record EmbeddingGoalRequest(
         UUID userid, // 사용자 아이디
-        String goalDetail // 사용자 목표 상세
+        String question // 사용자 질문
 ) {
 }

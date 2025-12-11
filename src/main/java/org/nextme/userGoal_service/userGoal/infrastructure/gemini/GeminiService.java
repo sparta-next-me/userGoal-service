@@ -47,15 +47,12 @@ public class GeminiService implements GeminiServiceAdapter {
         // 사용자 목표 내용을 임베딩 시켜 디비 저장
         embeddingServiceAdapter.embeddingGoal(request);
 
-
-        long start = System.currentTimeMillis();
-
         // 질문과 유사한 내용을 담고 있는 문서 3개 추출
         //SearchRequest : similaritySearch를 호출할 때 전달하는 검색 조건 객체
         SearchRequest search = SearchRequest.builder()
                 //query → 벡터 유사도 계산용 (임베딩 필요),
                 // query 용도: 1. 백터 존재 여부 확인용 / 2. 질문에 대한 값을 넣음 (예시 : "서울 아파트 투자 전략 알려줘")
-                .query(request.goalDetail()).topK(3).build();
+                .query(request.question()).topK(3).build();
 
         List<Document> topKs = vectorStore.similaritySearch(search);
 
@@ -68,7 +65,7 @@ public class GeminiService implements GeminiServiceAdapter {
 
         return client.prompt()
                 .user(s -> s.text(resource, StandardCharsets.UTF_8)
-                        .param("question", request.goalDetail())
+                        .param("question", request.question())
                         .param("context", documents)
                         .param("forceKorean", true)
                 ).call().content();

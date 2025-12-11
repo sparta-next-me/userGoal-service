@@ -13,7 +13,9 @@ import org.nextme.userGoal_service.userGoal.infrastructure.rebbitmq.UpdatePublis
 import org.nextme.userGoal_service.userGoal.infrastructure.rebbitmq.UpdateUserGoalEvent;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +35,17 @@ public class UserGoalService {
             throw new GoalException(GoalErrorCode.GOAL_MISSING_PARAMETER);
         }
 
+        // 유저가 있는지 확인
+        UserGoal userGoal_id = userGoalRepository.findByUserId(userGoalRequest.userId());
+
+        System.out.println(userGoalRequest.userId() );
+        System.out.println(userGoal_id);
+
+
+        if(userGoal_id!= null){
+            throw new GoalException(GoalErrorCode.USER_ID_ALREADY_EXISTS);
+        }
+
         UserGoal userGoal = UserGoal.builder()
                 .id(UserGoalId.of(UUID.randomUUID()))
                 .age(userGoalRequest.age())
@@ -40,7 +53,7 @@ public class UserGoalService {
                 .capital(userGoalRequest.capital())
                 .monthlyIncome(userGoalRequest.capital())
                 .fixedExpenses(userGoalRequest.capital())
-                .userId(UUID.randomUUID())
+                .userId(userGoalRequest.userId())
                 .build();
 
         userGoalRepository.save(userGoal);
@@ -65,6 +78,8 @@ public class UserGoalService {
             throw new GoalException(GoalErrorCode.GOAL_NOTING_CHANGE);
         }
 
+        // 유저 아이디
+        UUID updateUserId= userGoalRequest.userId();
         // 수정된 정보만 이벤트로 넘기기
         String updateData = "";
 
@@ -76,7 +91,7 @@ public class UserGoalService {
 
         // 수정 완료 후 이벤트 발행
         UpdateUserGoalEvent event = new UpdateUserGoalEvent(
-                userGoalRequest.userId(),
+                updateUserId,
                 updateData // 수정된 목표 상세만 보내기
         );
 
@@ -86,10 +101,10 @@ public class UserGoalService {
     }
 
     // 사용자 목표 조회
-    public UserGoalResponse getGoal(UUID userGoalId) {
+    public UserGoalResponse getGoal(UUID userId) {
 
         // 조회할 사용자가 있는지
-        UserGoal userGoal = userGoalRepository.findByUserId(userGoalId);
+        UserGoal userGoal = userGoalRepository.findByUserId(userId);
 
 
         // 사용자 목표가 없다면
@@ -101,9 +116,9 @@ public class UserGoalService {
     }
 
     // 사용자 목표 삭제
-    public void deleteGoal(UUID userGoalId) {
+    public void deleteGoal(UUID userId) {
         // 삭제할 사용자가 있는지
-        UserGoal userGoal = userGoalRepository.findByUserId(userGoalId);
+        UserGoal userGoal = userGoalRepository.findByUserId(userId);
 
         if (userGoal == null) {
             throw new GoalException(GoalErrorCode.GOAL_NOT_FOUND);
