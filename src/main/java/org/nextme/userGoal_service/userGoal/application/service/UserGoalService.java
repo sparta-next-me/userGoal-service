@@ -8,6 +8,7 @@ import org.nextme.userGoal_service.userGoal.domain.entity.UserGoal;
 import org.nextme.userGoal_service.userGoal.domain.entity.UserGoalId;
 import org.nextme.userGoal_service.userGoal.domain.repository.UserGoalRepository;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.UserGoalRequest;
+import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.response.UserGoalResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -41,4 +42,52 @@ public class UserGoalService {
         userGoalRepository.save(userGoal);
     }
 
+    // 사용자 목표 수정
+    public void update(UserGoalRequest userGoalRequest) {
+
+        // 사용자가 작성한 목표가 있는지 확인
+        UserGoal goal_user = userGoalRepository.findByUserId(userGoalRequest.userId());
+
+        // 사용자가 작성한 목표가 없다면
+        if(goal_user == null){
+            throw new GoalException(GoalErrorCode.GOAL_NOT_FOUND);
+        }
+
+        // 수정할 정보가 있는지 획인 후 있다면 상태 업데이트
+        boolean updatedGoal = goal_user.updateGoal(userGoalRequest);
+
+        // 수정할 정보가 없다면
+        if(!updatedGoal){
+            throw new GoalException(GoalErrorCode.GOAL_NOTING_CHANGE);
+        }
+
+    }
+
+    // 사용자 목표 조회
+    public UserGoalResponse getGoal(UUID userGoalId) {
+
+        // 조회할 사용자가 있는지
+        UserGoal userGoal = userGoalRepository.findByUserId(userGoalId);
+
+
+        // 사용자 목표가 없다면
+        if (userGoal == null) {
+            throw new GoalException(GoalErrorCode.GOAL_NOT_FOUND);
+        }
+
+        return UserGoalResponse.of(userGoal);
+    }
+
+    // 사용자 목표 삭제
+    public void deleteGoal(UUID userGoalId) {
+        // 삭제할 사용자가 있는지
+        UserGoal userGoal = userGoalRepository.findByUserId(userGoalId);
+
+        if (userGoal == null) {
+            throw new GoalException(GoalErrorCode.GOAL_NOT_FOUND);
+        }
+
+        userGoalRepository.delete(userGoal);
+
+    }
 }

@@ -52,5 +52,42 @@ public class UserGoal extends BaseEntity {
     // 사용자 ID
     private UUID userId;
 
+    public boolean updateGoal(UserGoalRequest userGoalRequest) {
+        boolean updatedGoal = false;
+
+        // 나이를 수정한다면
+        if(userGoalRequest.age() != null && !userGoalRequest.age().equals(this.age)){
+            this.age = userGoalRequest.age();
+            updatedGoal = true;
+        }
+
+        // 직업을 수정한다면
+        if(userGoalRequest.job() != null && !userGoalRequest.job().equals(this.job)) {
+            this.job = userGoalRequest.job();
+            updatedGoal = true;
+        }
+
+        // 자본금을 수정한다면
+        if(userGoalRequest.capital() != 0 && userGoalRequest.capital() != this.capital) {
+            this.capital = userGoalRequest.capital();
+            updatedGoal = true;
+        }
+
+        // 월수입을 수정한다면
+        if(userGoalRequest.monthlyIncome() != 0 && userGoalRequest.monthlyIncome() != this.monthlyIncome) {
+            this.monthlyIncome = userGoalRequest.monthlyIncome();
+            updatedGoal = true;
+        }
+
+        // 월고정지출을 수정한다면
+        if(userGoalRequest.fixedExpenses() != 0 && userGoalRequest.fixedExpenses() != this.fixedExpenses) {
+            this.fixedExpenses = userGoalRequest.fixedExpenses();
+            updatedGoal = true;
+        }
+        return updatedGoal;
+
+    }
+
+
 
 }
