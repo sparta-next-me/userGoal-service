@@ -28,6 +28,7 @@ repositories {
 
 ext {
     set('springCloudVersion', "2025.0.0")
+    set('springAiVersion', "1.1.1")
 }
 
 dependencies {
@@ -58,11 +59,45 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+
+    implementation 'org.springframework.ai:spring-ai-advisors-vector-store'
+//    implementation 'org.springframework.ai:spring-ai-starter-model-vertex-ai-embedding'
+//    implementation 'org.springframework.ai:spring-ai-starter-model-vertex-ai-gemini'
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+
+    // Ollama 모델 연동 (임베딩 및 추론 엔진)
+    //implementation 'org.springframework.ai:spring-ai-starter-model-ollama'
+
+    //gpt
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+
+
+    // kafka
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // Flyway`
+
+    implementation 'org.flywaydb:flyway-core'
+
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
+
+
+
 }
 
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
     }
 }
 

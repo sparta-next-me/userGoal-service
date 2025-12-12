@@ -34,15 +34,17 @@ public class UserGoalController {
     }
 
     @GetMapping
-    public ResponseEntity<CustomResponse<UserGoalResponse>> getGoal(@RequestParam UUID userGoalId) {
-        UserGoalResponse response = userGoalService.getGoal(userGoalId);
+    // 목표 조회
+    public ResponseEntity<CustomResponse<UserGoalResponse>> getGoal(@RequestParam UUID userId) {
+        UserGoalResponse response = userGoalService.getGoal(userId);
         return ResponseEntity.ok(CustomResponse.onSuccess("목표가 조회되었습니다.",response));
 
     }
 
     @DeleteMapping
-    public ResponseEntity<CustomResponse> delete(@RequestParam UUID userGoalId) {
-        userGoalService.deleteGoal(userGoalId);
+    // 목표삭제
+    public ResponseEntity<CustomResponse> delete(@RequestParam UUID userId) {
+        userGoalService.deleteGoal(userId);
         return ResponseEntity.ok(CustomResponse.onSuccess("목표가 삭제되었습니다."));
     }
 }
