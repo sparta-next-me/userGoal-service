@@ -10,3 +10,9 @@ services:
     ports:
       - "5672:5672"     # AMQP
       - "15672:15672"   # Management UI
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"

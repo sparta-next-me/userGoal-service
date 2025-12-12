@@ -1,7 +1,5 @@
 package org.nextme.userGoal_service.userGoal.infrastructure.gemini;
 
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.nextme.userGoal_service.userGoal.infrastructure.embedding.EmbeddingServiceAdapter;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.EmbeddingGoalRequest;
@@ -11,7 +9,9 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +40,8 @@ public class GeminiService implements GeminiServiceAdapter {
         this.vectorStore = vectorStore;
         this.embeddingServiceAdapter = embeddingServiceAdapter;
     }
+
+
 
     @Override
     public String answer(EmbeddingGoalRequest request) {
@@ -70,5 +72,11 @@ public class GeminiService implements GeminiServiceAdapter {
                         .param("forceKorean", true)
                 ).call().content();
 
+    }
+
+    @Override
+    // 챗봇에서 받은 질문에 대한 결과 반환
+    public String chatAnswer() {
+        return "";
     }
 }

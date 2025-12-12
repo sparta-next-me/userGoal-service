@@ -4,4 +4,5 @@ import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.requ
 
 public interface GeminiServiceAdapter {
     String answer(EmbeddingGoalRequest request);
+    String chatAnswer();
 }

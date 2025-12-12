@@ -47,7 +47,7 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
         userGoalEmbed(request);
 
         // 금융상품 임베딩 + 저장
-        bankItemEmbed();
+       bankItemEmbed();
 
     }
 
