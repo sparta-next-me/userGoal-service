@@ -1,0 +1,113 @@
+package org.nextme.userGoal_service.userGoal.infrastructure.ai;
+
+import lombok.extern.slf4j.Slf4j;
+import org.nextme.userGoal_service.userGoal.domain.entity.ChatMessage;
+import org.nextme.userGoal_service.userGoal.infrastructure.embedding.EmbeddingServiceAdapter;
+import org.nextme.userGoal_service.userGoal.infrastructure.kafka.dto.AiMessageResponse;
+import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.EmbeddingGoalRequest;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Slf4j
+public class AiService implements AiServiceAdapter {
+
+    private  EmbeddingServiceAdapter embeddingServiceAdapter;
+    private  VectorStore vectorStore;
+    private  ChatClient client;
+    private  ChatModel chatModel;
+
+    @Value("classpath:/ai/prompt.txt")
+    private Resource resource;
+
+    @Value("classpath:/ai/chat_prompt.txt")
+    private Resource resource1;
+
+
+
+    public AiService(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, EmbeddingServiceAdapter embeddingServiceAdapter, ChatModel chatModel) {
+        this.client = builder
+                .defaultAdvisors(
+                        MessageChatMemoryAdvisor.builder(chatMemory).build()
+                ).build();
+        this.vectorStore = vectorStore;
+        this.embeddingServiceAdapter = embeddingServiceAdapter;
+        this.chatModel = chatModel;
+    }
+
+
+
+    @Override
+    public String answer(EmbeddingGoalRequest request) {
+
+        // 사용자 목표 내용을 임베딩 시켜 디비 저장
+        embeddingServiceAdapter.embeddingGoal(request);
+
+        // 질문과 유사한 내용을 담고 있는 문서 3개 추출
+        // SearchRequest : similaritySearch를 호출할 때 전달하는 검색 조건 객체
+        SearchRequest search = SearchRequest.builder()
+                //query → 벡터 유사도 계산용 (임베딩 필요),
+                // query 용도: 1. 백터 존재 여부 확인용 / 2. 질문에 대한 값을 넣음 (예시 : "서울 아파트 투자 전략 알려줘")
+                .query(request.question()).topK(3).build();
+
+        List<Document> topKs = vectorStore.similaritySearch(search);
+
+
+        if (topKs.isEmpty()) return null;
+
+        String documents = topKs.stream().map(Document::getFormattedContent)
+                .collect(Collectors.joining());
+
+
+        return client.prompt()
+                .user(s -> s.text(resource, StandardCharsets.UTF_8)
+                        .param("question", request.question())
+                        .param("context", documents)
+                        .param("forceKorean", true)
+                ).call().content();
+
+    }
+
+    @Override
+    public AiMessageResponse chatAnswer(ChatMessage chatMessage) {
+        // 질문과 유사한 내용을 담고 있는 문서 3개 추출
+        //SearchRequest : similaritySearch를 호출할 때 전달하는 검색 조건 객체
+        SearchRequest search = SearchRequest.builder()
+                //query → 벡터 유사도 계산용 (임베딩 필요),
+                // query 용도: 1. 백터 존재 여부 확인용 / 2. 질문에 대한 값을 넣음 (예시 : "서울 아파트 투자 전략 알려줘")
+                .query(chatMessage.getContent()).topK(3).build();
+
+        List<Document> topKs = vectorStore.similaritySearch(search);
+
+
+        if (topKs.isEmpty()) return null;
+
+        String documents = topKs.stream().map(Document::getFormattedContent)
+                .collect(Collectors.joining());
+
+//        String result_content = chatModel.call(documents);
+
+        String result = client.prompt()
+                .user(s -> s.text(resource1, StandardCharsets.UTF_8)
+                        .param("question", chatMessage.getContent())
+                        .param("context", documents)
+                        .param("forceKorean", true)
+                ).call().content();
+
+        return AiMessageResponse.of(chatMessage,result);
+    }
+
+
+}
