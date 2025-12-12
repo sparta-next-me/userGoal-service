@@ -66,7 +66,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer # 메시지 값 직렬화(객체 -> JSON)
       properties:
         spring.json.add.type.headers: true
-
+  #GPT
   ai:
     openai:
       api-key: ${API_KEY}          # LLM용 OpenAI API 키
@@ -88,8 +88,6 @@ rabbitmq:
     name: nextme-exchange #사용할 exchange 이름
   routing:
     key: key
-
-#GPT
 
 
 rag:

@@ -9,21 +9,20 @@ import org.nextme.userGoal_service.userGoal.domain.entity.ReportId;
 import org.nextme.userGoal_service.userGoal.domain.entity.UserGoal;
 import org.nextme.userGoal_service.userGoal.domain.repository.ReportRepository;
 import org.nextme.userGoal_service.userGoal.domain.repository.UserGoalRepository;
-import org.nextme.userGoal_service.userGoal.infrastructure.gemini.GeminiServiceAdapter;
+import org.nextme.userGoal_service.userGoal.infrastructure.ai.AiServiceAdapter;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.AiSelectRequest;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.EmbeddingGoalRequest;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.response.AiResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AiReportService {
-    private final GeminiServiceAdapter geminiServiceAdapter;
+    private final AiServiceAdapter aiServiceAdapter;
     private final UserGoalRepository userGoalRepository;
     private final ReportRepository reportRepository;
 
@@ -38,7 +37,7 @@ public class AiReportService {
         }
 
         // gemini 호출
-        String recommendation = geminiServiceAdapter.answer(request);
+        String recommendation = aiServiceAdapter.answer(request);
         String cleanOutput = recommendation.replaceAll("(?is)<thought>.*?</thought>", "");
 
         Report report = Report.builder()

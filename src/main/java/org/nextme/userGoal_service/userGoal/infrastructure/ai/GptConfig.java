@@ -1,4 +1,4 @@
-package org.nextme.userGoal_service.userGoal.infrastructure.gpt;
+package org.nextme.userGoal_service.userGoal.infrastructure.ai;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;

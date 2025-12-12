@@ -1,4 +1,4 @@
-package org.nextme.userGoal_service.userGoal.infrastructure.gemini;
+package org.nextme.userGoal_service.userGoal.infrastructure.ai;
 
 import lombok.extern.slf4j.Slf4j;
 import org.nextme.userGoal_service.userGoal.infrastructure.embedding.EmbeddingServiceAdapter;
@@ -9,20 +9,17 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class GeminiService implements GeminiServiceAdapter {
+public class AiService implements AiServiceAdapter {
 
     private  EmbeddingServiceAdapter embeddingServiceAdapter;
     private  VectorStore vectorStore;
@@ -32,7 +29,7 @@ public class GeminiService implements GeminiServiceAdapter {
     private Resource resource;
 
 
-    public GeminiService(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, EmbeddingServiceAdapter embeddingServiceAdapter) {
+    public AiService(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, EmbeddingServiceAdapter embeddingServiceAdapter) {
         this.client = builder
                 .defaultAdvisors(
                         MessageChatMemoryAdvisor.builder(chatMemory).build()
