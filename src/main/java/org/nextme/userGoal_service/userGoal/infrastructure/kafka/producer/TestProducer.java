@@ -14,11 +14,12 @@ import java.util.UUID;
 
 @Component
 public class TestProducer implements AiResultProducer {
-    private KafkaTemplate<String, MessageTpl> kafkaTemplate;
-    private AiServiceAdapter aiServiceAdapter;
+    private final KafkaTemplate<String, MessageTpl> kafkaTemplate;
+    private final AiServiceAdapter aiServiceAdapter;
 
-    public TestProducer(KafkaTemplate<String, MessageTpl> kafkaTemplate) {
+    public TestProducer(KafkaTemplate<String, MessageTpl> kafkaTemplate, AiServiceAdapter aiServiceAdapter) {
         this.kafkaTemplate = kafkaTemplate;
+        this.aiServiceAdapter = aiServiceAdapter;
     }
 
 
@@ -33,7 +34,10 @@ public class TestProducer implements AiResultProducer {
                 .roomId(chatMessage.getRoomId())
                 .roomType(chatMessage.getRoomType())
                 .content(response.getContent())   // LLM에서 생성한 content
+                .sessionId(response.getSessionId())
                 .build();
+
+        System.out.println(result_response.getSessionId() + " 세션");
 
         // Kafka로 발행
         kafkaTemplate.send("ai.message", "aiMessage", result_response);
