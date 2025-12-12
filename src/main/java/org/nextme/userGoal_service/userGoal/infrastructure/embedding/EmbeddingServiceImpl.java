@@ -47,7 +47,7 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
         userGoalEmbed(request);
 
         // 금융상품 임베딩 + 저장
-       bankItemEmbed();
+       //bankItemEmbed();
 
     }
 
@@ -90,49 +90,49 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
     }
 
     // 금융상품 임베딩+저장
-    public void bankItemEmbed() {
-
-        // 4. 금융상품 Embedding
-        List<Map<String, Object>> bankItems = bankItemClient.getFinancialProducts();
-
-        TokenTextSplitter splitter = new TokenTextSplitter(1000, 400, 10, 5000, true);
-
-        for(Map<String, Object> item : bankItems) {
-
-            int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '금융상품' AND metadata->> 'bankItemId' = :bankItemId")
-                    .param("bankItemId",item.get("bankItemId"))
-                    .query(int.class)
-                    .single();
-
-            if(count > 0) {
-
-                continue;
-            }
-
-            String bankItem ="";
-            bankItem += " 금융상품 상품명 : " + item.get("fin_prdt_nm");
-            bankItem += " 가입제한 : " + item.get("join_deny");
-            bankItem += " 가입대상 : " + item.get("join_member");
-            bankItem += " 우대조건 : " + item.get("spcl_cnd");
-            bankItem += " 저축기간(개월) : " + item.get("save_trm");
-            bankItem += " 기본금리 : " + item.get("intr_rate");
-            bankItem += " 공시시작일 : " + item.get("dcls_strt_day");
-            bankItem += " 공시종료일 : " + item.get("dcls_end_day");
-            bankItem += " 최고한도 : " + item.get("max_limit");
-            bankItem += " 금융상품타입 : " + item.get("item_type");
-            bankItem += " 기타유의사항 : " + item.get("etc_note");
-
-
-
-            Document doc = new Document(bankItem,
-                    Map.of("source", "금융상품", "bankItemId", item.get("bankItemId")));
-            List<Document> splitBankDocs = splitter.apply(List.of(doc));
-
-            // 임베딩한 값 저장
-            vectorStore.accept(splitBankDocs);
-
-        }
-    }
+//    public void bankItemEmbed() {
+//
+//        // 4. 금융상품 Embedding
+//        List<Map<String, Object>> bankItems = bankItemClient.getFinancialProducts();
+//
+//        TokenTextSplitter splitter = new TokenTextSplitter(1000, 400, 10, 5000, true);
+//
+//        for(Map<String, Object> item : bankItems) {
+//
+//            int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '금융상품' AND metadata->> 'bankItemId' = :bankItemId")
+//                    .param("bankItemId",item.get("bankItemId"))
+//                    .query(int.class)
+//                    .single();
+//
+//            if(count > 0) {
+//
+//                continue;
+//            }
+//
+//            String bankItem ="";
+//            bankItem += " 금융상품 상품명 : " + item.get("fin_prdt_nm");
+//            bankItem += " 가입제한 : " + item.get("join_deny");
+//            bankItem += " 가입대상 : " + item.get("join_member");
+//            bankItem += " 우대조건 : " + item.get("spcl_cnd");
+//            bankItem += " 저축기간(개월) : " + item.get("save_trm");
+//            bankItem += " 기본금리 : " + item.get("intr_rate");
+//            bankItem += " 공시시작일 : " + item.get("dcls_strt_day");
+//            bankItem += " 공시종료일 : " + item.get("dcls_end_day");
+//            bankItem += " 최고한도 : " + item.get("max_limit");
+//            bankItem += " 금융상품타입 : " + item.get("item_type");
+//            bankItem += " 기타유의사항 : " + item.get("etc_note");
+//
+//
+//
+//            Document doc = new Document(bankItem,
+//                    Map.of("source", "금융상품", "bankItemId", item.get("bankItemId")));
+//            List<Document> splitBankDocs = splitter.apply(List.of(doc));
+//
+//            // 임베딩한 값 저장
+//            vectorStore.accept(splitBankDocs);
+//
+//        }
+//    }
 
     @Override
     @RabbitListener(queues = "nextme-queue")
