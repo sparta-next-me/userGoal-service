@@ -1,11 +1,14 @@
 package org.nextme.userGoal_service.userGoal.infrastructure.ai;
 
 import lombok.extern.slf4j.Slf4j;
+import org.nextme.userGoal_service.userGoal.domain.entity.ChatMessage;
 import org.nextme.userGoal_service.userGoal.infrastructure.embedding.EmbeddingServiceAdapter;
+import org.nextme.userGoal_service.userGoal.infrastructure.kafka.dto.AiMessageResponse;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.EmbeddingGoalRequest;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -24,6 +27,7 @@ public class AiService implements AiServiceAdapter {
     private  EmbeddingServiceAdapter embeddingServiceAdapter;
     private  VectorStore vectorStore;
     private  ChatClient client;
+    private ChatModel chatModel;
 
     @Value("classpath:/ai/prompt.txt")
     private Resource resource;
@@ -73,7 +77,11 @@ public class AiService implements AiServiceAdapter {
 
     @Override
     // 챗봇에서 받은 질문에 대한 결과 반환
-    public String chatAnswer() {
-        return "";
+    public AiMessageResponse chatAnswer(ChatMessage chatMessage) {
+
+        String result_content = chatModel.call(chatMessage.getContent());
+
+
+        return AiMessageResponse.of(chatMessage,result_content);
     }
 }

@@ -2,15 +2,16 @@ package org.nextme.userGoal_service.userGoal.application.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.nextme.userGoal_service.userGoal.application.dto.UpdateUserGoal;
 import org.nextme.userGoal_service.userGoal.application.exception.GoalErrorCode;
 import org.nextme.userGoal_service.userGoal.application.exception.GoalException;
 import org.nextme.userGoal_service.userGoal.domain.entity.UserGoal;
 import org.nextme.userGoal_service.userGoal.domain.entity.UserGoalId;
 import org.nextme.userGoal_service.userGoal.domain.repository.UserGoalRepository;
+import org.nextme.userGoal_service.userGoal.infrastructure.embedding.EmbeddingServiceAdapter;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.UserGoalRequest;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.response.UserGoalResponse;
-import org.nextme.userGoal_service.userGoal.infrastructure.rebbitmq.UpdatePublisher;
-import org.nextme.userGoal_service.userGoal.infrastructure.rebbitmq.UpdateUserGoalEvent;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,7 +24,8 @@ import java.util.stream.Collectors;
 public class UserGoalService {
 
     private final UserGoalRepository userGoalRepository;
-    private final UpdatePublisher updatePublisher;
+    private final EmbeddingServiceAdapter embeddingServiceAdapter;
+
 
 
     // 사용자 목표 생성
@@ -31,16 +33,12 @@ public class UserGoalService {
 
         // 목표 설계를 위한 정보를 전부 입력하지 않았다면
         if(userGoalRequest.age() == null && userGoalRequest.job() == null && userGoalRequest.monthlyIncome() == 0 &&
-        userGoalRequest.capital() == 0 && userGoalRequest.fixedExpenses() == 0){
+                userGoalRequest.capital() == 0 && userGoalRequest.fixedExpenses() == 0){
             throw new GoalException(GoalErrorCode.GOAL_MISSING_PARAMETER);
         }
 
         // 유저가 있는지 확인
         UserGoal userGoal_id = userGoalRepository.findByUserId(userGoalRequest.userId());
-
-        System.out.println(userGoalRequest.userId() );
-        System.out.println(userGoal_id);
-
 
         if(userGoal_id!= null){
             throw new GoalException(GoalErrorCode.USER_ID_ALREADY_EXISTS);
@@ -90,13 +88,13 @@ public class UserGoalService {
         updateData += " 월 고정지출 : " +userGoalRequest.fixedExpenses();
 
         // 수정 완료 후 이벤트 발행
-        UpdateUserGoalEvent event = new UpdateUserGoalEvent(
+        UpdateUserGoal event = new UpdateUserGoal(
                 updateUserId,
                 updateData // 수정된 목표 상세만 보내기
         );
 
-        // 이벤트 보내기
-        updatePublisher.sendUpdateEvent(event);
+        // vector_store update 메소드 호출
+        embeddingServiceAdapter.updateEmbeddingGoal(event);
 
     }
 

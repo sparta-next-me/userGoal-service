@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.nextme.userGoal_service.userGoal.application.dto.UpdateUserGoal;
 import org.nextme.userGoal_service.userGoal.application.exception.GoalErrorCode;
 import org.nextme.userGoal_service.userGoal.application.exception.GoalException;
 import org.nextme.userGoal_service.userGoal.domain.entity.UserGoal;
 import org.nextme.userGoal_service.userGoal.domain.repository.UserGoalRepository;
 import org.nextme.userGoal_service.userGoal.infrastructure.client.BankItemClient;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.EmbeddingGoalRequest;
-import org.nextme.userGoal_service.userGoal.infrastructure.rebbitmq.UpdateUserGoalEvent;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 
 import org.springframework.ai.vectorstore.VectorStore;
@@ -47,9 +47,10 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
         userGoalEmbed(request);
 
         // 금융상품 임베딩 + 저장
-       //bankItemEmbed();
+       bankItemEmbed();
 
     }
+
 
     // 사용자 목표 임베딩 + 저장
     public void userGoalEmbed(EmbeddingGoalRequest request) {
@@ -90,57 +91,57 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
     }
 
     // 금융상품 임베딩+저장
-//    public void bankItemEmbed() {
-//
-//        // 4. 금융상품 Embedding
-//        List<Map<String, Object>> bankItems = bankItemClient.getFinancialProducts();
-//
-//        TokenTextSplitter splitter = new TokenTextSplitter(1000, 400, 10, 5000, true);
-//
-//        for(Map<String, Object> item : bankItems) {
-//
-//            int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '금융상품' AND metadata->> 'bankItemId' = :bankItemId")
-//                    .param("bankItemId",item.get("bankItemId"))
-//                    .query(int.class)
-//                    .single();
-//
-//            if(count > 0) {
-//
-//                continue;
-//            }
-//
-//            String bankItem ="";
-//            bankItem += " 금융상품 상품명 : " + item.get("fin_prdt_nm");
-//            bankItem += " 가입제한 : " + item.get("join_deny");
-//            bankItem += " 가입대상 : " + item.get("join_member");
-//            bankItem += " 우대조건 : " + item.get("spcl_cnd");
-//            bankItem += " 저축기간(개월) : " + item.get("save_trm");
-//            bankItem += " 기본금리 : " + item.get("intr_rate");
-//            bankItem += " 공시시작일 : " + item.get("dcls_strt_day");
-//            bankItem += " 공시종료일 : " + item.get("dcls_end_day");
-//            bankItem += " 최고한도 : " + item.get("max_limit");
-//            bankItem += " 금융상품타입 : " + item.get("item_type");
-//            bankItem += " 기타유의사항 : " + item.get("etc_note");
-//
-//
-//
-//            Document doc = new Document(bankItem,
-//                    Map.of("source", "금융상품", "bankItemId", item.get("bankItemId")));
-//            List<Document> splitBankDocs = splitter.apply(List.of(doc));
-//
-//            // 임베딩한 값 저장
-//            vectorStore.accept(splitBankDocs);
-//
-//        }
-//    }
+    public void bankItemEmbed() {
+
+        // 4. 금융상품 Embedding
+        List<Map<String, Object>> bankItems = bankItemClient.getFinancialProducts();
+
+        TokenTextSplitter splitter = new TokenTextSplitter(1000, 400, 10, 5000, true);
+
+        for(Map<String, Object> item : bankItems) {
+
+            int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '금융상품' AND metadata->> 'bankItemId' = :bankItemId")
+                    .param("bankItemId",item.get("bankItemId"))
+                    .query(int.class)
+                    .single();
+
+            if(count > 0) {
+
+                continue;
+            }
+
+            String bankItem ="";
+            bankItem += " 금융상품 상품명 : " + item.get("fin_prdt_nm");
+            bankItem += " 가입제한 : " + item.get("join_deny");
+            bankItem += " 가입대상 : " + item.get("join_member");
+            bankItem += " 우대조건 : " + item.get("spcl_cnd");
+            bankItem += " 저축기간(개월) : " + item.get("save_trm");
+            bankItem += " 기본금리 : " + item.get("intr_rate");
+            bankItem += " 공시시작일 : " + item.get("dcls_strt_day");
+            bankItem += " 공시종료일 : " + item.get("dcls_end_day");
+            bankItem += " 최고한도 : " + item.get("max_limit");
+            bankItem += " 금융상품타입 : " + item.get("item_type");
+            bankItem += " 기타유의사항 : " + item.get("etc_note");
+
+
+
+            Document doc = new Document(bankItem,
+                    Map.of("source", "금융상품", "bankItemId", item.get("bankItemId")));
+            List<Document> splitBankDocs = splitter.apply(List.of(doc));
+
+            // 임베딩한 값 저장
+            vectorStore.accept(splitBankDocs);
+
+        }
+    }
 
     @Override
     @RabbitListener(queues = "nextme-queue")
     // 사용자가 목표 수정했을 시 백터 테이블 수정
-    public void updateEmbeddingGoal(UpdateUserGoalEvent updateUserGoalEvent) {
+    public void updateEmbeddingGoal(UpdateUserGoal updateUserGoal) {
         // 사용자의 아이디가 있는지 조회
         int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '사용자목표' AND metadata->> 'userId' = :userId")
-                .param("userId",updateUserGoalEvent.getUserId().toString())
+                .param("userId",updateUserGoal.getUserId().toString())
                 .query(int.class)
                 .single();
 
@@ -149,8 +150,8 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
             jdbcClient.sql(
                             "UPDATE vector_store SET content = :content " +
                                     "WHERE metadata->>'source' = '사용자목표' AND metadata->>'userId' = :userId")
-                    .param("content", updateUserGoalEvent.getUpdateGoal())
-                    .param("userId", updateUserGoalEvent.getUserId().toString())
+                    .param("content", updateUserGoal.getUpdateGoal())
+                    .param("userId", updateUserGoal.getUserId().toString())
                     .update();
         }
 

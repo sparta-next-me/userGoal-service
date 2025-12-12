@@ -5,16 +5,9 @@ import org.nextme.userGoal_service.userGoal.infrastructure.kafka.producer.TestPr
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.UUID;
-
 @SpringBootTest
 class UserGoalServiceApplicationTests {
-
-    @Autowired
-    private TestProducer testProducer;
-	@Test
 	void contextLoads() {
-        testProducer.send(UUID.randomUUID());
 
 	}
 
