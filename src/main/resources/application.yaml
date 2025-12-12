@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 11115
 spring:
   application:
     name: userGoal_service
@@ -17,11 +17,13 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: usergoalservice
 
   flyway:
     enabled: true
-    schemas: userGoalService
-    default-schema: userGoalService
+    schemas: usergoalservice
+    default-schema: usergoalservice
     baseline-on-migrate: true
 
 #   Google Vertex AI 및 벡터 스토어 설정
