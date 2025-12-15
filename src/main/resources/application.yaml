@@ -90,11 +90,11 @@ spring:
 
   config:
     import: 'optional:configserver:'
-    cloud:
-      config:
-        discovery:
-          enabled: true
-          service-id: config-server
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
 
 rag:
   embedding-model: text-embedding-3-small
