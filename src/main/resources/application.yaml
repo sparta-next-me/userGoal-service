@@ -2,7 +2,7 @@ server:
   port: 11115
 spring:
   application:
-    name: usergoal-service
+    name: usergoal_service
 
   datasource:
     url: ${DB_URL}
@@ -88,6 +88,14 @@ spring:
       pgvector:
         enabled: false
 
+  config:
+    import: 'optional:configserver:'
+    cloud:
+      config:
+        discovery:
+          enabled: true
+          service-id: config-server
+
 rag:
   embedding-model: text-embedding-3-small
 
@@ -101,13 +109,7 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: ${DEFAULT_ZONE}
-config:
-  import: 'optional:configserver:'
-  cloud:
-    config:
-      discovery:
-        enabled: true
-        service-id: config-server
+
 
 
 # OPEN DOC API 설정
