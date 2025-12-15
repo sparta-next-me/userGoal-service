@@ -2,7 +2,7 @@ server:
   port: 11115
 spring:
   application:
-    name: usergoal_service
+    name: usergoal-service
 
   datasource:
     url: ${DB_URL}
