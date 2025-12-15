@@ -10,8 +10,12 @@ import java.util.Map;
 import java.util.UUID;
 
 @FeignClient(name = "account-server",configuration = FeignConfig.class, url = "http://localhost:8080")
-public interface BankItemClient {
+public interface feignClient {
 
-    @GetMapping("/v1/financial-products/report")
+    @GetMapping("/v1/account/financial-products/report")
     List<Map<String, Object>> getFinancialProducts();
+
+    @GetMapping("/v1/account/tran/tranList/{userId}")
+    List<Map<String, Object>> getTranList(@PathVariable("userId") UUID userId);
+
 }

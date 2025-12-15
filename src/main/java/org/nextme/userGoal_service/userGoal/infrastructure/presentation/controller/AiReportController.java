@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/v1/report")
+@RequestMapping("/v1/usergoal/report")
 @RequiredArgsConstructor
 public class AiReportController {
     private final AiReportService aiReportService;

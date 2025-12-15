@@ -84,7 +84,9 @@ spring:
       embedding:
         api-key: ${API_KEY}        # 임베딩용 OpenAI API 키
         model: text-embedding-3-small
-
+    vectorstore:
+      pgvector:
+        enabled: false
 
 rag:
   embedding-model: text-embedding-3-small
