@@ -87,6 +87,7 @@ pipeline {
 
                       echo "Starting new user-service container..."
                       docker run -d --name ${CONTAINER_NAME} \\
+                        -e EUREKA_INSTANCE_HOSTNAME='34.50.7.8' \\
                         --env-file \${ENV_FILE} \\
                         -p ${HOST_PORT}:${CONTAINER_PORT} \\
                         ${FULL_IMAGE}
