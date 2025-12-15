@@ -42,7 +42,7 @@ dependencies {
     implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
     //implementation 'org.apache.kafka:kafka-streams'
     //implementation 'org.springframework.amqp:spring-rabbit-stream'
-    //implementation 'org.springframework.cloud:spring-cloud-starter-config'
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     //implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
