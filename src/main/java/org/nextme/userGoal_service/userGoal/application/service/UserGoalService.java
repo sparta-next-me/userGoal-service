@@ -49,8 +49,8 @@ public class UserGoalService {
                 .age(userGoalRequest.age())
                 .job(userGoalRequest.job())
                 .capital(userGoalRequest.capital())
-                .monthlyIncome(userGoalRequest.capital())
-                .fixedExpenses(userGoalRequest.capital())
+                .monthlyIncome(userGoalRequest.monthlyIncome())
+                .fixedExpenses(userGoalRequest.fixedExpenses())
                 .userId(userGoalRequest.userId())
                 .build();
 

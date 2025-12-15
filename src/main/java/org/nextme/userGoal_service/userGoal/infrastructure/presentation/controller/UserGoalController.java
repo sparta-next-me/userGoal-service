@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/v1/user-goal")
+@RequestMapping("/v1/usergoal")
 @RequiredArgsConstructor
 public class UserGoalController {
 
