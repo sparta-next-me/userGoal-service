@@ -1,5 +1,5 @@
 server:
-  port: 11115
+  port: 11116
 spring:
   application:
     name: usergoal-service
