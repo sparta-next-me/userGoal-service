@@ -11,8 +11,8 @@ pipeline {
         FULL_IMAGE      = "${REGISTRY}/${GH_OWNER}/${IMAGE_REPO}:latest"
 
         CONTAINER_NAME  = "usergoal-service"
-        HOST_PORT       = "11115"
-        CONTAINER_PORT  = "11115"
+        HOST_PORT       = "11116"
+        CONTAINER_PORT  = "11116"
     }
 
     stages {
@@ -87,6 +87,7 @@ pipeline {
 
                       echo "Starting new user-service container..."
                       docker run -d --name ${CONTAINER_NAME} \\
+                        -e EUREKA_INSTANCE_HOSTNAME='34.50.7.8' \\
                         --env-file \${ENV_FILE} \\
                         -p ${HOST_PORT}:${CONTAINER_PORT} \\
                         ${FULL_IMAGE}
