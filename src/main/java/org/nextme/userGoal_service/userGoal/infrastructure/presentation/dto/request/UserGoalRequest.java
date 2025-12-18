@@ -7,7 +7,6 @@ public record UserGoalRequest(
         String job, // 직업
         int capital, // 자본금
         int monthlyIncome, //월수입
-        int fixedExpenses, // 월 고정지출
-        UUID userId // 사용자 ID
+        int fixedExpenses // 월 고정지출
 ) {
 }

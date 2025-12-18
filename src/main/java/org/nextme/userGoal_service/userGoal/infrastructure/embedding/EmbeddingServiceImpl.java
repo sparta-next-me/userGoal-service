@@ -41,10 +41,10 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
      */
 
     @Override
-    public void embeddingGoal(EmbeddingGoalRequest request) {
+    public void embeddingGoal(EmbeddingGoalRequest request, UUID userId) {
 
         // 사용자 목표 임베딩 + 저장
-        userGoalEmbed(request);
+        userGoalEmbed(request, userId);
 
         // 금융상품 임베딩 + 저장
         bankItemEmbed();
@@ -56,10 +56,10 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
 
 
     // 사용자 목표 임베딩 + 저장
-    public void userGoalEmbed(EmbeddingGoalRequest request) {
+    public void userGoalEmbed(EmbeddingGoalRequest request,UUID userId) {
 
         // 1. DB에서 사용자 목표 조회
-        UserGoal goals = userGoalRepository.findByUserId(request.userid());
+        UserGoal goals = userGoalRepository.findByUserId(userId);
 
         if (goals == null) {
             throw new GoalException(GoalErrorCode.USER_ID_NOT_FOUND);
@@ -77,7 +77,7 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
 
         // 사용자의 아이디가 있는지 조회
         int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '사용자목표' AND metadata->> 'userId' = :userId")
-                .param("userId",request.userid().toString())
+                .param("userId",userId.toString())
                 .query(int.class)
                 .single();
 
