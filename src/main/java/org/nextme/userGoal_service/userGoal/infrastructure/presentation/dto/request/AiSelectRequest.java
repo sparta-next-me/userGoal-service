@@ -3,8 +3,7 @@ package org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.req
 import java.util.UUID;
 
 public record AiSelectRequest(
-        UUID reportId, // 분석Id
-        UUID userId // 사용자Id
+        UUID reportId // 분석Id
 
 ) {
 }

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,10 +51,10 @@ public class AiService implements AiServiceAdapter {
 
 
     @Override
-    public String answer(EmbeddingGoalRequest request) {
+    public String answer(EmbeddingGoalRequest request, UUID userId) {
 
         // 사용자 목표 내용을 임베딩 시켜 디비 저장
-        embeddingServiceAdapter.embeddingGoal(request);
+        embeddingServiceAdapter.embeddingGoal(request, userId);
 
         // 질문과 유사한 내용을 담고 있는 문서 3개 추출
         // SearchRequest : similaritySearch를 호출할 때 전달하는 검색 조건 객체
