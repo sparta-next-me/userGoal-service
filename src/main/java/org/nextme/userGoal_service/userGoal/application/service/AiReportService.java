@@ -58,7 +58,7 @@ public class AiReportService {
     public List<AiResponse> getAll(AiSelectRequest request,UUID userId) {
 
         // 조회할 사용자가 있는지
-        List<Report> reportResponse = reportRepository.findByUserGoalUserIdOrderByCreatedAtDesc(userId);
+        List<Report> reportResponse = reportRepository.findByIdAndUserGoalUserIdOrderByCreatedAtDesc(request.reportId(),userId);
 
         return reportResponse.stream().map(AiResponse::of).collect(Collectors.toList());
 
