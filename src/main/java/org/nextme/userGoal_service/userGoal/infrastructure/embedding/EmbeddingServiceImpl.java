@@ -41,25 +41,25 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
      */
 
     @Override
-    public void embeddingGoal(EmbeddingGoalRequest request) {
+    public void embeddingGoal(EmbeddingGoalRequest request, UUID userId) {
 
         // 사용자 목표 임베딩 + 저장
-        userGoalEmbed(request);
+        userGoalEmbed(request, userId);
 
         // 금융상품 임베딩 + 저장
         bankItemEmbed();
 
         // 거래내역 임베딩 + 저장
-        tranListEmbed(request.userid());
+        //tranListEmbed(request.userid());
 
     }
 
 
     // 사용자 목표 임베딩 + 저장
-    public void userGoalEmbed(EmbeddingGoalRequest request) {
+    public void userGoalEmbed(EmbeddingGoalRequest request,UUID userId) {
 
         // 1. DB에서 사용자 목표 조회
-        UserGoal goals = userGoalRepository.findByUserId(request.userid());
+        UserGoal goals = userGoalRepository.findByUserId(userId);
 
         if (goals == null) {
             throw new GoalException(GoalErrorCode.USER_ID_NOT_FOUND);
@@ -77,7 +77,7 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
 
         // 사용자의 아이디가 있는지 조회
         int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '사용자목표' AND metadata->> 'userId' = :userId")
-                .param("userId",request.userid().toString())
+                .param("userId",userId.toString())
                 .query(int.class)
                 .single();
 
@@ -163,57 +163,57 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
     }
 
     // 사용자 거래내역 임베딩
-    public void tranListEmbed(UUID userId) {
-
-        // 거래내역 정보 가져오기
-        List<Map<String, Object>> tranList = feignClient.getTranList(userId);
-
-
-        TokenTextSplitter splitter = new TokenTextSplitter(1000, 400, 10, 5000, true);
-
-
-        // 사용자의 아이디가 있는지 조회
-        int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '사용자목표' AND metadata->> 'userId' = :userId")
-                .param("userId",tranList.get(0).get("userId"))
-                .query(int.class)
-                .single();
-
-
-        // 유저아이디가 있다면
-        if (count > 0) {
-            for(Map<String, Object> item : tranList) {
-                // 거래내역이 이미 있는지 확인
-                int tran_count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '거래내역' AND metadata->> 'tranId' = :tranId")
-                        .param("tranId",item.get("tranId"))
-                        .query(int.class)
-                        .single();
-
-                if (tran_count > 0) {
-                    continue;
-                }
-
-                String tran = "";
-                tran += " 거래일자: " + item.get("resAccountTrDate");
-                tran += " 거래시각 : " + item.get("resAccountTrTime");
-                tran += " 출금금액 : " + item.get("resAccountOut");
-                tran += " 입금금액 : " + item.get("resAccountIn");
-                tran +=  " 거래명 : " + item.get("counterpartyName");
-
-                Document doc = new Document(tran,
-                        Map.of("source", "거래내역", "tranId", item.get("tranId")));
-                List<Document> splitBankDocs = splitter.apply(List.of(doc));
-
-                // 임베딩한 값 저장
-                vectorStore.accept(splitBankDocs);
-
-            }
-
-
-
-
-        }
-
-    }
+//    public void tranListEmbed(UUID userId) {
+//
+//        // 거래내역 정보 가져오기
+//        List<Map<String, Object>> tranList = feignClient.getTranList(userId);
+//
+//
+//        TokenTextSplitter splitter = new TokenTextSplitter(1000, 400, 10, 5000, true);
+//
+//
+//        // 사용자의 아이디가 있는지 조회
+//        int count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '사용자목표' AND metadata->> 'userId' = :userId")
+//                .param("userId",tranList.get(0).get("userId"))
+//                .query(int.class)
+//                .single();
+//
+//
+//        // 유저아이디가 있다면
+//        if (count > 0) {
+//            for(Map<String, Object> item : tranList) {
+//                // 거래내역이 이미 있는지 확인
+//                int tran_count = jdbcClient.sql("SELECT COUNT(*) FROM vector_store WHERE metadata->>'source' = '거래내역' AND metadata->> 'tranId' = :tranId")
+//                        .param("tranId",item.get("tranId"))
+//                        .query(int.class)
+//                        .single();
+//
+//                if (tran_count > 0) {
+//                    continue;
+//                }
+//
+//                String tran = "";
+//                tran += " 거래일자: " + item.get("resAccountTrDate");
+//                tran += " 거래시각 : " + item.get("resAccountTrTime");
+//                tran += " 출금금액 : " + item.get("resAccountOut");
+//                tran += " 입금금액 : " + item.get("resAccountIn");
+//                tran +=  " 거래명 : " + item.get("counterpartyName");
+//
+//                Document doc = new Document(tran,
+//                        Map.of("source", "거래내역", "tranId", item.get("tranId")));
+//                List<Document> splitBankDocs = splitter.apply(List.of(doc));
+//
+//                // 임베딩한 값 저장
+//                vectorStore.accept(splitBankDocs);
+//
+//            }
+//
+//
+//
+//
+//        }
+//
+//    }
 
 
 

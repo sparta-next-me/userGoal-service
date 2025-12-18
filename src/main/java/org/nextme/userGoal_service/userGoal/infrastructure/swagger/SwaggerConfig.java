@@ -1,4 +1,4 @@
-package org.nextme.userGoal_service.userGoal.infrastructure.swagger;
+package org.nextme.account_server.account.infrastructure.swagger;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -21,7 +21,7 @@ import java.util.Map;
 public class SwaggerConfig {
 
 
-    private final String PREFIX = "/v1/user";
+    private final String PREFIX = "/v1/usergoal";
 
     @Bean
     public OpenAPI openAPI(@Value("${openapi.service.url}") String url) {
@@ -29,8 +29,8 @@ public class SwaggerConfig {
                 .servers(List.of(new Server().url(url)))
                 .components(new Components().addSecuritySchemes("Bearer", new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")))
                 .addSecurityItem(new SecurityRequirement().addList("Bearer"))
-                .info(new Info().title("NEXT ME 유저")
-                        .description("User API"));
+                .info(new Info().title("미래설계 서비스")
+                        .description("USERGOAL API"));
     }
 
     @Bean

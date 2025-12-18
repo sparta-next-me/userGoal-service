@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@FeignClient(name = "account-server",configuration = FeignConfig.class, url = "http://localhost:8080")
+@FeignClient(name = "account-server",configuration = FeignConfig.class, url = "http://34.50.7.8:3000")
 public interface feignClient {
 
     @GetMapping("/v1/account/financial-products/report")

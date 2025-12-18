@@ -27,9 +27,9 @@ public class AiReportService {
     private final ReportRepository reportRepository;
 
     // 추천 금융상품 반환하기 위한 로직
-    public AiResponse create(EmbeddingGoalRequest request) {
+    public AiResponse create(EmbeddingGoalRequest request,  UUID userId) {
         // 사용자 맞는지
-        UserGoal userGoal = userGoalRepository.findByUserId(request.userid());
+        UserGoal userGoal = userGoalRepository.findByUserId(userId);
 
         // 조회한 사용자 아이디가 null이라면
         if (userGoal == null) {
@@ -37,14 +37,14 @@ public class AiReportService {
         }
 
         // gemini 호출
-        String recommendation = aiServiceAdapter.answer(request);
+        String recommendation = aiServiceAdapter.answer(request, userId);
         String cleanOutput = recommendation.replaceAll("(?is)<thought>.*?</thought>", "");
 
         Report report = Report.builder()
                 .id(ReportId.of(UUID.randomUUID()))
                 .question(request.question())
                 .userGoal(userGoal)
-                .modelName("Ollama")
+                .modelName("gpt-5-nano")
                 .resultReport(cleanOutput)
                 .build();
 
@@ -55,18 +55,18 @@ public class AiReportService {
 
 
     // 전체조회
-    public List<AiResponse> getAll(AiSelectRequest request) {
+    public List<AiResponse> getAll(AiSelectRequest request,UUID userId) {
 
         // 조회할 사용자가 있는지
-        List<Report> reportResponse = reportRepository.findByUserGoalUserIdOrderByCreatedAtDesc(request.userId());
+        List<Report> reportResponse = reportRepository.findByUserGoalUserIdOrderByCreatedAtDesc(userId);
 
         return reportResponse.stream().map(AiResponse::of).collect(Collectors.toList());
 
     }
 
     // 단건조회
-    public AiResponse getOne(AiSelectRequest request) {
-        Report reportResponse = reportRepository.findByUserGoalUserIdAndId(request.userId(), ReportId.of(request.reportId()));
+    public AiResponse getOne(AiSelectRequest request,UUID userId) {
+        Report reportResponse = reportRepository.findByUserGoalUserIdAndId(userId, ReportId.of(request.reportId()));
         if (reportResponse == null) {
             throw new GoalException(GoalErrorCode.REPORT_NOT_FOUND);
         }

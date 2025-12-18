@@ -29,7 +29,7 @@ public class UserGoalService {
 
 
     // 사용자 목표 생성
-    public void create(UserGoalRequest userGoalRequest) {
+    public void create(UserGoalRequest userGoalRequest, UUID userId) {
 
         // 목표 설계를 위한 정보를 전부 입력하지 않았다면
         if(userGoalRequest.age() == null && userGoalRequest.job() == null && userGoalRequest.monthlyIncome() == 0 &&
@@ -38,7 +38,7 @@ public class UserGoalService {
         }
 
         // 유저가 있는지 확인
-        UserGoal userGoal_id = userGoalRepository.findByUserId(userGoalRequest.userId());
+        UserGoal userGoal_id = userGoalRepository.findByUserId(userId);
 
         if(userGoal_id!= null){
             throw new GoalException(GoalErrorCode.USER_ID_ALREADY_EXISTS);
@@ -51,17 +51,17 @@ public class UserGoalService {
                 .capital(userGoalRequest.capital())
                 .monthlyIncome(userGoalRequest.monthlyIncome())
                 .fixedExpenses(userGoalRequest.fixedExpenses())
-                .userId(userGoalRequest.userId())
+                .userId(userId)
                 .build();
 
         userGoalRepository.save(userGoal);
     }
 
     // 사용자 목표 수정
-    public void update(UserGoalRequest userGoalRequest) {
+    public void update(UserGoalRequest userGoalRequest, UUID userId) {
 
         // 사용자가 작성한 목표가 있는지 확인
-        UserGoal goal_user = userGoalRepository.findByUserId(userGoalRequest.userId());
+        UserGoal goal_user = userGoalRepository.findByUserId(userId);
 
         // 사용자가 작성한 목표가 없다면
         if(goal_user == null){
@@ -77,7 +77,7 @@ public class UserGoalService {
         }
 
         // 유저 아이디
-        UUID updateUserId= userGoalRequest.userId();
+        UUID updateUserId= userId;
         // 수정된 정보만 이벤트로 넘기기
         String updateData = "";
 
