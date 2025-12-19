@@ -46,7 +46,7 @@ public class UserGoalController {
         return ResponseEntity.ok(CustomResponse.onSuccess("목표가 조회되었습니다.",response));
 
     }
-
+    @PreAuthorize("hasRole('USER') or hasRole('ADVISOR')")
     @DeleteMapping
     // 목표삭제
     public ResponseEntity<CustomResponse> delete(@AuthenticationPrincipal UserPrincipal principal) {

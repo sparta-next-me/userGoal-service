@@ -7,12 +7,14 @@ import org.nextme.userGoal_service.userGoal.application.exception.GoalException;
 import org.nextme.userGoal_service.userGoal.domain.entity.Report;
 import org.nextme.userGoal_service.userGoal.domain.entity.ReportId;
 import org.nextme.userGoal_service.userGoal.domain.entity.UserGoal;
+import org.nextme.userGoal_service.userGoal.domain.entity.UserGoalId;
 import org.nextme.userGoal_service.userGoal.domain.repository.ReportRepository;
 import org.nextme.userGoal_service.userGoal.domain.repository.UserGoalRepository;
 import org.nextme.userGoal_service.userGoal.infrastructure.ai.AiServiceAdapter;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.AiSelectRequest;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.EmbeddingGoalRequest;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.response.AiResponse;
+import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.response.AiSelectResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -55,26 +57,28 @@ public class AiReportService {
 
 
     // 전체조회
-    public List<AiResponse> getAll(AiSelectRequest request,UUID userId) {
+    public List<AiSelectResponse> getAll(UUID userId) {
 
         // 조회할 사용자가 있는지
-        List<Report> reportResponse = reportRepository.findByIdAndUserGoalUserIdOrderByCreatedAtDesc(request.reportId(),userId);
+        List<Report> reportResponse = reportRepository.findByUserGoalUserIdOrderByCreatedAtDesc(userId);
 
-        return reportResponse.stream().map(AiResponse::of).collect(Collectors.toList());
+        System.out.println(reportResponse.toString() + " 전체");
+
+        return reportResponse.stream().map(AiSelectResponse::of).collect(Collectors.toList());
 
     }
 
     // 단건조회
-    public AiResponse getOne(AiSelectRequest request,UUID userId) {
-        Report reportResponse = reportRepository.findByUserGoalUserIdAndId(userId, ReportId.of(request.reportId()));
+    public AiSelectResponse getOne(AiSelectRequest request) {
+        Report reportResponse = reportRepository.findById(ReportId.of(request.reportId()));
         if (reportResponse == null) {
             throw new GoalException(GoalErrorCode.REPORT_NOT_FOUND);
         }
-        return AiResponse.of(reportResponse);
+        return AiSelectResponse.of(reportResponse);
     }
 
     public void deleteReport(UUID reportId) {
-        // 삭제할 사용자가 있는지
+        // 삭제할 분석결과가 있는지
         Report report = reportRepository.findById(ReportId.of(reportId));
         if (report == null) {
             throw new GoalException(GoalErrorCode.REPORT_ID_NOT_FOUND);
@@ -82,4 +86,5 @@ public class AiReportService {
 
         reportRepository.delete(report);
     }
+
 }

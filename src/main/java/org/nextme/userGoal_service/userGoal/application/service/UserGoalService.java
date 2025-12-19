@@ -7,6 +7,7 @@ import org.nextme.userGoal_service.userGoal.application.exception.GoalErrorCode;
 import org.nextme.userGoal_service.userGoal.application.exception.GoalException;
 import org.nextme.userGoal_service.userGoal.domain.entity.UserGoal;
 import org.nextme.userGoal_service.userGoal.domain.entity.UserGoalId;
+import org.nextme.userGoal_service.userGoal.domain.repository.ReportRepository;
 import org.nextme.userGoal_service.userGoal.domain.repository.UserGoalRepository;
 import org.nextme.userGoal_service.userGoal.infrastructure.embedding.EmbeddingServiceAdapter;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.UserGoalRequest;
@@ -25,6 +26,7 @@ public class UserGoalService {
 
     private final UserGoalRepository userGoalRepository;
     private final EmbeddingServiceAdapter embeddingServiceAdapter;
+    private final ReportRepository reportRepository;
 
 
 
@@ -121,6 +123,8 @@ public class UserGoalService {
         if (userGoal == null) {
             throw new GoalException(GoalErrorCode.GOAL_NOT_FOUND);
         }
+        // 사용자의 분석 결과 삭제를 위한 조회
+        reportRepository.deleteByUserGoalId(userGoal.getId());
 
         userGoalRepository.delete(userGoal);
 
