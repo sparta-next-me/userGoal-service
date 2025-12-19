@@ -19,5 +19,7 @@ public interface ReportRepository extends JpaRepository<Report, UUID> {
 
     Report findById(ReportId reportId);
 
-    List<Report> findByIdAndUserGoalUserIdOrderByCreatedAtDesc(UUID reportId, UUID userId);
+    List<Report> findByUserGoalId(UserGoalId of);
+
+    void deleteByUserGoalId(UserGoalId id);
 }
