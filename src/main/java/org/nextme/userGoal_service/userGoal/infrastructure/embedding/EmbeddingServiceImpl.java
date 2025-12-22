@@ -8,7 +8,7 @@ import org.nextme.userGoal_service.userGoal.application.exception.GoalErrorCode;
 import org.nextme.userGoal_service.userGoal.application.exception.GoalException;
 import org.nextme.userGoal_service.userGoal.domain.entity.UserGoal;
 import org.nextme.userGoal_service.userGoal.domain.repository.UserGoalRepository;
-import org.nextme.userGoal_service.userGoal.infrastructure.client.feignClient;
+//import org.nextme.userGoal_service.userGoal.infrastructure.client.feignClient;
 import org.nextme.userGoal_service.userGoal.infrastructure.presentation.dto.request.EmbeddingGoalRequest;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 
@@ -29,7 +29,7 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
     private final UserGoalRepository userGoalRepository;
 //    @Qualifier("customVectorStore")
     private final VectorStore vectorStore;
-    private final feignClient feignClient;
+//    private final feignClient feignClient;
     private final JdbcClient jdbcClient;
 
 
