@@ -61,24 +61,30 @@ public class AiService implements AiServiceAdapter {
         SearchRequest search = SearchRequest.builder()
                 //query → 벡터 유사도 계산용 (임베딩 필요),
                 // query 용도: 1. 백터 존재 여부 확인용 / 2. 질문에 대한 값을 넣음 (예시 : "서울 아파트 투자 전략 알려줘")
-                .query(request.question()).topK(3).build();
+                .query(request.question()).topK(5)
+                .filterExpression("userId == '" + userId.toString() + "'").build();
+
 
         List<Document> topKs = vectorStore.similaritySearch(search);
 
+        if (topKs.isEmpty()) {
+            log.info("No documents found for userId={}", userId);
+            return null;
+        }
 
-        if (topKs.isEmpty()) return null;
 
-        String documents = topKs.stream().map(Document::getFormattedContent)
-                .collect(Collectors.joining());
-
+        String documents = topKs.stream()
+                .map(Document::getFormattedContent)
+                .collect(Collectors.joining("\n"));
 
         return client.prompt()
                 .user(s -> s.text(resource, StandardCharsets.UTF_8)
                         .param("question", request.question())
                         .param("context", documents)
                         .param("forceKorean", true)
-                ).call().content();
-
+                )
+                .call()
+                .content();
     }
 
     @Override
