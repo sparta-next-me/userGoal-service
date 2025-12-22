@@ -14,8 +14,6 @@ import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.document.Document;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 
@@ -96,7 +94,6 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
 
 
     @Override
-    @RabbitListener(queues = "nextme-queue")
     // 사용자가 목표 수정했을 시 백터 테이블 수정
     public void updateEmbeddingGoal(UpdateUserGoal updateUserGoal) {
         // 사용자의 아이디가 있는지 조회
