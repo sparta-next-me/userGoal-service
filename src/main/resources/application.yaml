@@ -93,30 +93,42 @@ spring:
       pgvector:
         enabled: false
 
-  config:
-    import: 'optional:configserver:'
-  cloud:
+#  config:
+#    import: 'optional:configserver:'
+#  cloud:
+#    config:
+#      discovery:
+#        enabled: true
+#        service-id: config-server
     config:
-      discovery:
-        enabled: true
-        service-id: config-server
+      # 유레카를 거치지 않고 직접 쿠버네티스 서비스 주소로 찌름
+      import: 'optional:configserver:http://config-server.next-me.svc.cluster.local:3100'
+    cloud:
+      config:
+        discovery:
+          enabled: false
 
 rag:
   embedding-model: text-embedding-3-small
 
 
 
+#eureka:
+#  instance:
+#    prefer-ip-address: false
+#    hostname: localhost
+#  client:
+#    register-with-eureka: true
+#    fetch-registry: true
+#    service-url:
+#      defaultZone: ${DEFAULT_ZONE}
+
 eureka:
   instance:
-    prefer-ip-address: false
-    hostname: localhost
+    prefer-ip-address: true
   client:
-    register-with-eureka: true
-    fetch-registry: true
     service-url:
-      defaultZone: ${DEFAULT_ZONE}
-
-
+      defaultZone: http://eureka-server.next-me.svc.cluster.local:3151/eureka/
 
 # OPEN DOC API 설정
 springdoc:

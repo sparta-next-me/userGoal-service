@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usergoal-service
+  namespace: next-me
+  labels:
+    app: usergoal-service
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: usergoal-service
+  template:
+    metadata:
+      labels:
+        app: usergoal-service
+    spec:
+      imagePullSecrets:
+        - name: ghcr-cred
+      containers:
+        - name: usergoal-service
+          image: ghcr.io/sparta-next-me/usergoal-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 11116
+
+          envFrom:
+            - secretRef:
+                name: usergoal-env
+
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+            # Config Server 직접 연결 설정 (에러 방지용 강제 주입)
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:configserver:http://config-server.next-me.svc.cluster.local:3100"
+            - name: SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED
+              value: "false"
+            - name: JAVA_OPTS
+              value: "-Xms512m -Xmx1Gi"
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 11116
+            initialDelaySeconds: 90
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 11116
+            initialDelaySeconds: 120
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: usergoal-service
+  namespace: next-me
+spec:
+  selector:
+    app: usergoal-service
+  ports:
+    - name: http
+      port: 11116
+      targetPort: 11116
+  type: ClusterIP
