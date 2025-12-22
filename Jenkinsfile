@@ -68,12 +68,22 @@ pipeline {
         }
     }
 
+// 모든 작업이 끝난 후 실행되는 섹션
     post {
         always {
             echo "Cleaning up Docker resources..."
+            // 1. 방금 빌드에 사용한 특정 이미지 삭제
             sh "docker rmi ${FULL_IMAGE} || true"
-            // 사용하지 않는 매달린 이미지/컨테이너 정리 (용량 확보)
+
+            // 2. [추가] 사용하지 않는 모든 이미지, 컨테이너, 네트워크 강제 정리 (용량 확보 핵심)
+            // 지워지지 않고 남아있는 RabbitMQ 관련 찌꺼기 등도 여기서 정리됩니다.
             sh "docker system prune -f"
+        }
+        success {
+            echo "Successfully deployed ${APP_NAME} to Kubernetes Cluster!"
+        }
+        failure {
+            echo "Deployment failed. Please check the Jenkins console logs."
         }
     }
 }
