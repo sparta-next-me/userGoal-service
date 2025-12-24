@@ -17,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -55,49 +56,45 @@ public class AiService implements AiServiceAdapter {
     @Override
     public String answer(EmbeddingGoalRequest request, UUID userId) {
 
-        // 1. 사용자 목표 임베딩 (기존 로직 유지)
+        //사용자 목표 임베딩 (기존 로직 유지)
         embeddingServiceAdapter.embeddingGoal(request, userId);
 
-        // 2. 사용자목표 + 금융상품 함께 검색
-        SearchRequest search = SearchRequest.builder()
+        //사용자 목표 조회
+        SearchRequest userGoalSearch = SearchRequest.builder()
+                .query(request.question())
+                .topK(1)
+                .filterExpression("source == '사용자목표' AND userId == '" + userId.toString() + "'")
+                .build();
+        List<Document> userGoalDocs = vectorStore.similaritySearch(userGoalSearch);
+
+        // 금융상품 조회
+        SearchRequest productSearch = SearchRequest.builder()
                 .query(request.question())
                 .topK(5)
-                .filterExpression(
-                        "source == '금융상품' OR " +
-                                "(source == '사용자목표' AND userId == '" + userId.toString() + "')"
-                )
+                .filterExpression("source == '금융상품'")
                 .build();
+        List<Document> productDocs = vectorStore.similaritySearch(productSearch);
 
-        // 3. 벡터 검색 실행
-        List<Document> topKs = vectorStore.similaritySearch(search);
+        // context 합치기
+        List<Document> contextDocs = new ArrayList<>();
+        contextDocs.addAll(userGoalDocs);
+        contextDocs.addAll(productDocs);
 
-        if (topKs.isEmpty()) {
-            log.info("No documents found for userId={}", userId);
-            return "요청하신 조건에 맞는 금융상품 정보가 존재하지 않습니다. 금융 상담원을 통해 확인해 주세요.";
-        }
-
-        // 4. 금융상품 존재 여부 검증 (환각 차단 핵심)
-        boolean hasFinancialProduct = topKs.stream()
-                .anyMatch(d -> "금융상품".equals(d.getMetadata().get("source")));
-
-        if (!hasFinancialProduct) {
-            return "요청하신 조건에 맞는 금융상품 정보가 부족하여 정확한 추천이 어렵습니다. 금융 상담원을 통해 확인해 주세요.";
-        }
-
-        // 5. Context 생성
-        String documents = topKs.stream()
+        String context = contextDocs.stream()
                 .map(Document::getFormattedContent)
                 .collect(Collectors.joining("\n"));
 
-        // 6. LLM 호출
-        return client.prompt()
+        // LLM 호출 (프롬프트에서 context 기반으로만 추천하도록 명시)
+        String result = client.prompt()
                 .user(s -> s.text(resource, StandardCharsets.UTF_8)
                         .param("question", request.question())
-                        .param("context", documents)
+                        .param("context", context)
                         .param("forceKorean", true)
                 )
                 .call()
                 .content();
+
+        return result;
     }
 
     @Override
