@@ -55,6 +55,7 @@ public class AiService implements AiServiceAdapter {
 
     @Override
     public String answer(EmbeddingGoalRequest request, UUID userId) {
+        log.info("userId : {}", userId);
 
         //사용자 목표 임베딩 (기존 로직 유지)
         embeddingServiceAdapter.embeddingGoal(request, userId);
@@ -65,7 +66,12 @@ public class AiService implements AiServiceAdapter {
                 .topK(1)
                 .filterExpression("source == '사용자목표' AND userId == '" + userId.toString() + "'")
                 .build();
+
+        log.info("userGoalSearcher : " + userGoalSearch );
+
         List<Document> userGoalDocs = vectorStore.similaritySearch(userGoalSearch);
+        log.info("userGoalDocs : " + userGoalDocs);
+
 
         // 금융상품 조회
         SearchRequest productSearch = SearchRequest.builder()
@@ -73,16 +79,25 @@ public class AiService implements AiServiceAdapter {
                 .topK(5)
                 .filterExpression("source == '금융상품'")
                 .build();
+
+        log.info("productSearcher : " + productSearch );
+
         List<Document> productDocs = vectorStore.similaritySearch(productSearch);
+        log.info("productDocs : " + productDocs);
+
 
         // context 합치기
         List<Document> contextDocs = new ArrayList<>();
+        log.info("contextDocs : " + contextDocs);
+
         contextDocs.addAll(userGoalDocs);
         contextDocs.addAll(productDocs);
+        log.info("contextDocs 결과 : " + contextDocs);
 
         String context = contextDocs.stream()
                 .map(Document::getFormattedContent)
                 .collect(Collectors.joining("\n"));
+        log.info("context : " + context);
 
         // LLM 호출 (프롬프트에서 context 기반으로만 추천하도록 명시)
         String result = client.prompt()
@@ -93,7 +108,7 @@ public class AiService implements AiServiceAdapter {
                 )
                 .call()
                 .content();
-
+        log.info("result : " + result);
         return result;
     }
 

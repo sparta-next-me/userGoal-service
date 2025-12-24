@@ -2,6 +2,7 @@ package org.nextme.userGoal_service.userGoal.application.service;
 
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.nextme.userGoal_service.userGoal.application.exception.GoalErrorCode;
 import org.nextme.userGoal_service.userGoal.application.exception.GoalException;
 import org.nextme.userGoal_service.userGoal.domain.entity.Report;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AiReportService {
     private final AiServiceAdapter aiServiceAdapter;
     private final UserGoalRepository userGoalRepository;
@@ -30,8 +32,11 @@ public class AiReportService {
 
     // 추천 금융상품 반환하기 위한 로직
     public AiResponse create(EmbeddingGoalRequest request,  UUID userId) {
+
+        log.info("userId 확인 : " + userId);
         // 사용자 맞는지
         UserGoal userGoal = userGoalRepository.findByUserId(userId);
+        log.info("유저 조회 확인 : " + userGoal.toString());
 
         // 조회한 사용자 아이디가 null이라면
         if (userGoal == null) {
@@ -40,6 +45,7 @@ public class AiReportService {
 
         // gemini 호출
         String recommendation = aiServiceAdapter.answer(request, userId);
+        log.info("추천 결과 확인 : " + recommendation);
         String cleanOutput = recommendation.replaceAll("(?is)<thought>.*?</thought>", "");
 
         Report report = Report.builder()
