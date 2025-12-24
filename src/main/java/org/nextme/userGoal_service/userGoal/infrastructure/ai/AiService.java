@@ -25,10 +25,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AiService implements AiServiceAdapter {
 
-    private  EmbeddingServiceAdapter embeddingServiceAdapter;
-    private  VectorStore vectorStore;
-    private  ChatClient client;
-    private  ChatModel chatModel;
+    private EmbeddingServiceAdapter embeddingServiceAdapter;
+    private VectorStore vectorStore;
+    private ChatClient client;
+    private ChatModel chatModel;
 
     @Value("classpath:/ai/prompt.txt")
     private Resource resource;
@@ -36,47 +36,60 @@ public class AiService implements AiServiceAdapter {
     @Value("classpath:/ai/chat_prompt.txt")
     private Resource resource1;
 
+    public AiService(ChatClient.Builder builder,
+                     ChatMemory chatMemory,
+                     VectorStore vectorStore,
+                     EmbeddingServiceAdapter embeddingServiceAdapter,
+                     ChatModel chatModel) {
 
-
-    public AiService(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, EmbeddingServiceAdapter embeddingServiceAdapter, ChatModel chatModel) {
         this.client = builder
                 .defaultAdvisors(
                         MessageChatMemoryAdvisor.builder(chatMemory).build()
                 ).build();
+
         this.vectorStore = vectorStore;
         this.embeddingServiceAdapter = embeddingServiceAdapter;
         this.chatModel = chatModel;
     }
 
-
-
     @Override
     public String answer(EmbeddingGoalRequest request, UUID userId) {
 
-        // 사용자 목표 내용을 임베딩 시켜 디비 저장
+        // 1. 사용자 목표 임베딩 (기존 로직 유지)
         embeddingServiceAdapter.embeddingGoal(request, userId);
 
-        // 질문과 유사한 내용을 담고 있는 문서 3개 추출
-        // SearchRequest : similaritySearch를 호출할 때 전달하는 검색 조건 객체
+        // 2. 사용자목표 + 금융상품 함께 검색
         SearchRequest search = SearchRequest.builder()
-                //query → 벡터 유사도 계산용 (임베딩 필요),
-                // query 용도: 1. 백터 존재 여부 확인용 / 2. 질문에 대한 값을 넣음 (예시 : "서울 아파트 투자 전략 알려줘")
-                .query(request.question()).topK(5)
-                .filterExpression("userId == '" + userId.toString() + "'").build();
+                .query(request.question())
+                .topK(5)
+                .filterExpression(
+                        "source == '금융상품' OR " +
+                                "(source == '사용자목표' AND userId == '" + userId.toString() + "')"
+                )
+                .build();
 
-
+        // 3. 벡터 검색 실행
         List<Document> topKs = vectorStore.similaritySearch(search);
 
         if (topKs.isEmpty()) {
             log.info("No documents found for userId={}", userId);
-            return null;
+            return "요청하신 조건에 맞는 금융상품 정보가 존재하지 않습니다. 금융 상담원을 통해 확인해 주세요.";
         }
 
+        // 4. 금융상품 존재 여부 검증 (환각 차단 핵심)
+        boolean hasFinancialProduct = topKs.stream()
+                .anyMatch(d -> "금융상품".equals(d.getMetadata().get("source")));
 
+        if (!hasFinancialProduct) {
+            return "요청하신 조건에 맞는 금융상품 정보가 부족하여 정확한 추천이 어렵습니다. 금융 상담원을 통해 확인해 주세요.";
+        }
+
+        // 5. Context 생성
         String documents = topKs.stream()
                 .map(Document::getFormattedContent)
                 .collect(Collectors.joining("\n"));
 
+        // 6. LLM 호출
         return client.prompt()
                 .user(s -> s.text(resource, StandardCharsets.UTF_8)
                         .param("question", request.question())
@@ -89,32 +102,29 @@ public class AiService implements AiServiceAdapter {
 
     @Override
     public AiMessageResponse chatAnswer(ChatMessage chatMessage) {
-        // 질문과 유사한 내용을 담고 있는 문서 3개 추출
-        //SearchRequest : similaritySearch를 호출할 때 전달하는 검색 조건 객체
+
         SearchRequest search = SearchRequest.builder()
-                //query → 벡터 유사도 계산용 (임베딩 필요),
-                // query 용도: 1. 백터 존재 여부 확인용 / 2. 질문에 대한 값을 넣음 (예시 : "서울 아파트 투자 전략 알려줘")
-                .query(chatMessage.getContent()).topK(3).build();
+                .query(chatMessage.getContent())
+                .topK(3)
+                .build();
 
         List<Document> topKs = vectorStore.similaritySearch(search);
 
-
         if (topKs.isEmpty()) return null;
 
-        String documents = topKs.stream().map(Document::getFormattedContent)
+        String documents = topKs.stream()
+                .map(Document::getFormattedContent)
                 .collect(Collectors.joining());
-
-//        String result_content = chatModel.call(documents);
 
         String result = client.prompt()
                 .user(s -> s.text(resource1, StandardCharsets.UTF_8)
                         .param("question", chatMessage.getContent())
                         .param("context", documents)
                         .param("forceKorean", true)
-                ).call().content();
+                )
+                .call()
+                .content();
 
-        return AiMessageResponse.of(chatMessage,result);
+        return AiMessageResponse.of(chatMessage, result);
     }
-
-
 }
