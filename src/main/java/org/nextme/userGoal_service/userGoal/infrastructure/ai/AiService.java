@@ -57,11 +57,14 @@ public class AiService implements AiServiceAdapter {
     public String answer(EmbeddingGoalRequest request, UUID userId) {
         log.info("userId : {}", userId);
 
-        //사용자 목표 임베딩 (기존 로직 유지)
+        //사용자 목표 임베딩 
         embeddingServiceAdapter.embeddingGoal(request, userId);
 
         //사용자 목표 조회
+        // SearchRequest : similaritySearch를 호출할 때 전달하는 검색 조건 객체
         SearchRequest userGoalSearch = SearchRequest.builder()
+                 //query → 벡터 유사도 계산용 (임베딩 필요),
+                // query 용도: 1. 백터 존재 여부 확인용 / 2. 질문에 대한 값을 넣음 (예시 : "서울 아파트 투자 전략 알려줘")
                 .query(request.question())
                 .topK(1)
                 .filterExpression("source == '사용자목표' AND userId == '" + userId.toString() + "'")
@@ -74,6 +77,7 @@ public class AiService implements AiServiceAdapter {
 
 
         // 금융상품 조회
+        // 질문과 유사한 내용을 담고 있는 문서 5개 추출
         SearchRequest productSearch = SearchRequest.builder()
                 .query(request.question())
                 .topK(5)
