@@ -53,7 +53,12 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
     }
 
 
-    // 사용자 목표 임베딩 + 저장
+     /**
+     * 사용자 목표 정보를 기반으로 임베딩 수행
+     * - DB에서 사용자 목표 조회
+     * - 자연어 텍스트로 변환
+     * - 토큰 단위로 분할 후 벡터 스토어에 저장
+     */
     public void userGoalEmbed(EmbeddingGoalRequest request,UUID userId) {
 
         // 1. DB에서 사용자 목표 조회
@@ -71,6 +76,13 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
                         " 월고정지출 : " + goals.getFixedExpenses()+
                 " 질문 : " + request.question();
 
+        //텍스트를 토큰 단위로 분할하기 위한 설정
+        //긴 텍스트를 어떤 기준과 크기로 쪼갤지 정의하는 분할 규칙
+        //chunk size : 한 Document에 들어갈 최대 토큰 수
+        //overlap : 다음 chunk와 겹쳐서 포함할 토큰 수
+        // 최소 분할 단위 : 너무 짧은 조각을 방지하기 위한 기준
+        //최대 허용 토큰 : 이 이상이면 강제 분할
+        // 정규화 여부 : 토큰 기준으로 정확히 분할
         TokenTextSplitter splitter = new TokenTextSplitter(1000, 400, 10, 5000, true);
 
         // 사용자의 아이디가 있는지 조회
@@ -84,10 +96,15 @@ public class EmbeddingServiceImpl implements EmbeddingServiceAdapter {
             return;
         }
 
+         // Document 객체 생성 (본문 + 메타데이터)
         List<Document> userDocs = List.of(new Document(userText,
                 Map.of("source", "사용자목표", "userId", goals.getUserId())));
+
+         // 긴 Context 텍스트를 토큰 기준으로 여러 개의 작은 Document로 분할
+        // 임베딩 전 단계
         List<Document> splitUserDocs = splitter.apply(userDocs);
 
+        // 이때 임베딩 처리
         vectorStore.accept(splitUserDocs);
 
     }
